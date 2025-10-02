@@ -1,7 +1,7 @@
 // src/main/java/com/yourcompany/urlshortener/UrlShortenerApp.java
 
 // your company -> shortly 
-package com.shortly.urlshortener;
+package com.yourcompany.urlshortener;
 
 public class UrlShortenerApp {
 
