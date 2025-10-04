@@ -1,155 +1,130 @@
 package com.yourcompany.urlshortener;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.Scanner;
 
 /**
- * PR 5 & PR 6: Handles database connection, table creation, saving (shortening), 
- * and looking up (retrieving) URLs.
+ * PR 8: Main application class. Adds basic URL validation logic.
  */
-public class DatabaseManager {
+public class UrlShortenerApp {
 
-    private static final String DB_URL = "jdbc:h2:mem:shortenerdb";
-    private static final String DB_USER = "sa";
-    private static final String DB_PASSWORD = ""; 
+    private final Scanner scanner = new Scanner(System.in);
+    private final int KEY_LENGTH = 6;
+    
+    private boolean isDatabaseReady = false;
 
-    private static final String CREATE_TABLE_SQL = 
-        "CREATE TABLE IF NOT EXISTS urls (" +
-        "    id INT AUTO_INCREMENT PRIMARY KEY," +
-        "    short_key VARCHAR(10) NOT NULL UNIQUE," +
-        "    long_url VARCHAR(2048) NOT NULL," +
-        "    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
-        ");";
+    public static void main(String[] args) {
+        UrlShortenerApp app = new UrlShortenerApp();
+        app.start();
+    }
+    
+    /**
+     * Initializes the database connection and starts the main application loop.
+     */
+    public void start() {
+        System.out.println("--- URL Shortener Console App v1.0 ---");
+        
+        // 1. Initialize and confirm DB connection and schema
+        if (DatabaseManager.getConnection() != null) {
+            DatabaseManager.initializeDatabase(); 
+            isDatabaseReady = true;
+        } else {
+            System.err.println("CRITICAL: Database connection failed. Cannot start application.");
+            return;
+        }
+        
+        // 2. Start the interactive loop
+        mainLoop();
+    }
 
-    // PR 5: SQL statement for inserting a new URL pair
-    private static final String INSERT_URL_SQL = 
-        "INSERT INTO urls (short_key, long_url) VALUES (?, ?)";
+    /**
+     * Presents the user menu and handles command input.
+     */
+    private void mainLoop() {
+        String input;
+        
+        if (!isDatabaseReady) return; 
 
-    // PR 6: SQL statement for looking up the original URL by key
-    private static final String SELECT_URL_SQL =
-        "SELECT long_url FROM urls WHERE short_key = ?";
+        while (true) {
+            System.out.println("\n-------------------------------------");
+            System.out.println("Select an option:");
+            System.out.println(" [1] Shorten a long URL");
+            System.out.println(" [2] Lookup a short key");
+            System.out.println(" [0] Exit");
+            System.out.print(" >> ");
 
-
-    public static Connection getConnection() {
-        try {
-            Class.forName("org.h2.Driver"); 
-            return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-        } catch (ClassNotFoundException e) {
-            System.err.println("❌ Error: H2 JDBC Driver not found.");
-            return null;
-        } catch (SQLException e) {
-            System.err.println("❌ Error connecting to the database. Check settings.");
-            e.printStackTrace();
-            return null;
+            input = scanner.nextLine().trim();
+            
+            switch (input) {
+                case "1":
+                    shortenUrl();
+                    break;
+                case "2":
+                    lookupUrl();
+                    break;
+                case "0":
+                    System.out.println("\nGoodbye! Thanks for using the URL Shortener.");
+                    return; 
+                default:
+                    System.out.println("❗ Invalid choice. Please enter 1, 2, or 0.");
+            }
         }
     }
     
-    public static void initializeDatabase() {
-        try (Connection conn = getConnection();
-             Statement stmt = conn.createStatement()) {
-            
-            if (conn != null) {
-                stmt.execute(CREATE_TABLE_SQL);
-                System.out.println("✅ Schema status: 'urls' table initialized successfully.");
-            }
-            
-        } catch (SQLException e) {
-            System.err.println("❌ Error initializing database table: " + e.getMessage());
-        }
+    /**
+     * Checks if the URL has a valid protocol prefix.
+     * This is a simple validation (PR 8).
+     */
+    private static boolean isValidUrl(String url) {
+        return url != null && (url.startsWith("http://") || url.startsWith("https://"));
     }
 
     /**
-     * PR 5 Feature: Saves the short key and original URL to the database.
-     * @param shortKey The unique key generated for the URL.
-     * @param longUrl The original long URL.
-     * @return true if the save was successful, false otherwise.
+     * Prompts for a long URL, validates it, generates a key, and saves it.
      */
-    public static boolean saveUrl(String shortKey, String longUrl) {
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(INSERT_URL_SQL)) {
-
-            pstmt.setString(1, shortKey); 
-            pstmt.setString(2, longUrl); 
-
-            int affectedRows = pstmt.executeUpdate();
-            return affectedRows > 0;
-
-        } catch (SQLException e) {
-            // This is where we'll focus on collision errors later (PR 9)
-            System.err.println("❌ Database save failed for key '" + shortKey + "': " + e.getMessage());
-            return false;
+    private void shortenUrl() {
+        System.out.print("\nEnter the URL to shorten: ");
+        String longUrl = scanner.nextLine().trim();
+        
+        if (longUrl.isEmpty()) {
+            System.out.println("❗ URL cannot be empty.");
+            return;
+        }
+        
+        // PR 8: URL Validation Check
+        if (!isValidUrl(longUrl)) {
+            System.out.println("❌ Invalid URL format. URL must start with http:// or https://");
+            return;
+        }
+        
+        String shortKey = KeyGenerator.generateKey(KEY_LENGTH);
+        
+        if (DatabaseManager.saveUrl(shortKey, longUrl)) {
+            System.out.println("\n✅ Success! Your shortened URL key is:");
+            System.out.println("   --> Key: " + shortKey);
+        } else {
+            System.out.println("❌ Failed to shorten URL. Database error occurred.");
         }
     }
-
+    
     /**
-     * PR 6 Feature: Retrieves the original long URL associated with a short key.
-     * @param shortKey The key to look up.
-     * @return The original long URL, or null if the key is not found.
+     * Prompts for a short key and retrieves the original URL.
      */
-    public static String findLongUrl(String shortKey) {
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(SELECT_URL_SQL)) {
+    private void lookupUrl() {
+        System.print("\nEnter the short key to lookup: ");
+        String shortKey = scanner.nextLine().trim();
 
-            pstmt.setString(1, shortKey); 
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                
-                if (rs.next()) {
-                    // Get the 'long_url' value from the result row
-                    return rs.getString("long_url");
-                }
-            }
-            
-            // If the key wasn't found, return null
-            return null;
-
-        } catch (SQLException e) {
-            System.err.println("❌ Database lookup failed for key '" + shortKey + "': " + e.getMessage());
-            return null;
+        if (shortKey.isEmpty()) {
+            System.out.println("❗ Key cannot be empty.");
+            return;
         }
-    }
-
-    /**
-     * Test method updated to run initialization, save, and then lookup.
-     */
-    public static void testConnection() {
-        try (Connection conn = getConnection()) {
-            if (conn != null && !conn.isClosed()) {
-                System.out.println("✅ Connection status: Database connection successful.");
-                initializeDatabase(); 
-                
-                // --- PR 5/6 Combined Test ---
-                // NOTE: We rely on the KeyGenerator class being available in the path
-                String testKey = KeyGenerator.generateKey(6); 
-                String testUrl = "https://www.google.com/mega-long-url-for-pr5-pr6-test";
-                
-                // 1. Save the URL (PR 5)
-                if (saveUrl(testKey, testUrl)) {
-                    System.out.println("✅ Save status: Key '" + testKey + "' stored successfully.");
-                    
-                    // 2. Look up the key we just saved (PR 6)
-                    String retrievedUrl = findLongUrl(testKey);
-                    
-                    if (testUrl.equals(retrievedUrl)) {
-                        System.out.println("✅ Lookup status: Success! Retrieved URL matches saved URL. (PR 5 & 6 PASS)");
-                        System.out.println("   Key: " + testKey + " -> URL: " + retrievedUrl);
-                    } else {
-                        System.err.println("❌ Lookup status: Retrieved URL did not match saved URL! (PR 5 & 6 FAIL)");
-                    }
-                    
-                } else {
-                    System.err.println("❌ Save status: Failed to store test key.");
-                }
-
-            } else {
-                System.err.println("❌ Connection status: Database connection failed!");
-            }
-        } catch (SQLException e) {
-            System.err.println("Error checking connection status: " + e.getMessage());
+        
+        String longUrl = DatabaseManager.findLongUrl(shortKey);
+        
+        if (longUrl != null) {
+            System.out.println("\n✅ Key found! Original URL:");
+            System.out.println("   --> URL: " + longUrl);
+        } else {
+            System.out.println("\n❗ Key not found in the database. Try shortening a URL first!");
         }
     }
 }
