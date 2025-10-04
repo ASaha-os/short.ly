@@ -123,8 +123,7 @@ public class DatabaseManager {
                 initializeDatabase(); 
                 
                 // --- PR 5/6 Combined Test ---
-                // NOTE: We rely on the KeyGenerator class being available in the path
-                String testKey = KeyGenerator.generateKey(6); 
+                String testKey = KeyGenerator.generateKey(6);
                 String testUrl = "https://www.google.com/mega-long-url-for-pr5-pr6-test";
                 
                 // 1. Save the URL (PR 5)
