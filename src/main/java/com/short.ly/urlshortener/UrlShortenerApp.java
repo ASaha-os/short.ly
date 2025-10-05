@@ -3,12 +3,14 @@ package com.yourcompany.urlshortener;
 import java.util.Scanner;
 
 /**
- * PR 8: Main application class. Adds basic URL validation logic.
+ * PR 9: Main application class. Adds retry logic for key collisions.
  */
 public class UrlShortenerApp {
 
     private final Scanner scanner = new Scanner(System.in);
     private final int KEY_LENGTH = 6;
+    // PR 9: Define the maximum number of times to try saving a key
+    private final int MAX_RETRIES = 5; 
     
     private boolean isDatabaseReady = false;
 
@@ -17,11 +19,8 @@ public class UrlShortenerApp {
         app.start();
     }
     
-    /**
-     * Initializes the database connection and starts the main application loop.
-     */
     public void start() {
-        System.out.println("--- URL Shortener Console App v1.0 ---");
+        System.out.println("--- URL Shortener Console App v1.0 (Robust) ---");
         
         // 1. Initialize and confirm DB connection and schema
         if (DatabaseManager.getConnection() != null) {
@@ -36,9 +35,6 @@ public class UrlShortenerApp {
         mainLoop();
     }
 
-    /**
-     * Presents the user menu and handles command input.
-     */
     private void mainLoop() {
         String input;
         
@@ -70,16 +66,12 @@ public class UrlShortenerApp {
         }
     }
     
-    /**
-     * Checks if the URL has a valid protocol prefix.
-     * This is a simple validation (PR 8).
-     */
     private static boolean isValidUrl(String url) {
         return url != null && (url.startsWith("http://") || url.startsWith("https://"));
     }
 
     /**
-     * Prompts for a long URL, validates it, generates a key, and saves it.
+     * PR 9: Implements the retry loop for shortening a URL.
      */
     private void shortenUrl() {
         System.out.print("\nEnter the URL to shorten: ");
@@ -90,25 +82,34 @@ public class UrlShortenerApp {
             return;
         }
         
-        // PR 8: URL Validation Check
         if (!isValidUrl(longUrl)) {
             System.out.println("❌ Invalid URL format. URL must start with http:// or https://");
             return;
         }
         
-        String shortKey = KeyGenerator.generateKey(KEY_LENGTH);
-        
-        if (DatabaseManager.saveUrl(shortKey, longUrl)) {
-            System.out.println("\n✅ Success! Your shortened URL key is:");
-            System.out.println("   --> Key: " + shortKey);
-        } else {
-            System.out.println("❌ Failed to shorten URL. Database error occurred.");
+        // PR 9: Retry Logic Start
+        for (int retry = 1; retry <= MAX_RETRIES; retry++) {
+            String shortKey = KeyGenerator.generateKey(KEY_LENGTH);
+            
+            if (DatabaseManager.saveUrl(shortKey, longUrl)) {
+                // Success path
+                System.out.println("\n✅ Success! Your shortened URL key is:");
+                System.out.println("   --> Key: " + shortKey);
+                return; // Exit the function after success
+            }
+            
+            // Failure path (likely collision, handled in DatabaseManager)
+            if (retry < MAX_RETRIES) {
+                // If it fails but we have retries left, wait briefly before trying again (optional, but good practice)
+                System.out.println("   Attempt " + retry + " failed. Retrying with a new key...");
+                try { Thread.sleep(100); } catch (InterruptedException ignored) {}
+            }
         }
+        
+        // If the loop finishes without returning (meaning MAX_RETRIES was reached)
+        System.out.println("\n❌ FAILED! Could not shorten URL after " + MAX_RETRIES + " attempts due to repeated collisions. Try again later.");
     }
     
-    /**
-     * Prompts for a short key and retrieves the original URL.
-     */
     private void lookupUrl() {
         System.print("\nEnter the short key to lookup: ");
         String shortKey = scanner.nextLine().trim();
