@@ -2,6 +2,14 @@
 
 A console-based, beginner-friendly Java application demonstrating core backend development concepts, including JDBC, H2 SQL database integration, and basic system design principles.This project was developed using a 10-step roadmap, with each step designed as a separate Pull Request (PR) for Hacktoberfest contributions.
 
+## Preview
+
+- [Features]
+- [Prerequisites]
+- [How to build and run]
+- [Running Test]
+- [Project Structure]
+  
 ## Features
 
 - **URL Shortening**: Generates a unique, short key (6 characters, alphanumeric) for any long URL.
