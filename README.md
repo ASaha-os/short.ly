@@ -12,17 +12,80 @@ A console-based, beginner-friendly **Java** application demonstrating core backe
   
 ## ⭐️ Features
 
-- **URL Shortening**: Generates a unique, short key (6 characters, alphanumeric) for any long URL.
+#### 1️⃣ URL Shortening
 
-- **Database Persistence**: Uses an in-memory H2 SQL database to store mappings between short keys and long URLs.
+Generates a unique, short key (6 characters, alphanumeric) for any long URL.
 
-- **Key Lookup**: Retrieves the original long URL given a short key.
+**Example:**
 
-- **Input Validation**: Ensures only correctly formatted URLs (starting with http:// or https://) are accepted.
+Input:
 
-- **Interactive Console**: Provides a simple command-line interface for shortening and looking up URLs.
+```
+Enter 1 to shorten a new URL or 2 to retrieve one:
+> 1
+Enter the original URL:
+> https://abc.com/research/
+```
 
-- **Unit Tested**: Includes JUnit 5 tests for core components (KeyGenerator and DatabaseManager).
+Output:
+```
+Shortened URL created successfully!
+Short Key: Xy7Ab2
+```
+
+#### 2️⃣ Database Persistence
+
+Uses an in-memory H2 SQL database to store mappings between short keys and long URLs.
+
+
+#### 3️⃣ Key Lookup 
+
+Retrieves the original long URL given a short key.
+
+**Example:**
+
+Input:
+
+```
+Enter 1 to shorten a new URL or 2 to retrieve one:
+> 2
+Enter the short key:
+> Xy7Ab2
+```
+
+Output:
+
+```
+🔗 Original URL: https://abc.com/research/
+```
+
+
+#### 4️⃣ Input Validation 
+
+Ensures only correctly formatted URLs (starting with http:// or https://) are accepted.
+
+**Example:**
+
+Input:
+
+```
+Enter the original URL:
+> abc.com
+```
+
+Output:
+
+```
+Invalid URL format! Please include http:// or https://
+```
+
+#### 5️⃣ Interactive Console 
+
+Provides a simple command-line interface for shortening and looking up URLs.
+
+#### 6️⃣ Unit Tested
+
+Includes JUnit 5 tests for core components (KeyGenerator and DatabaseManager).
 
 ## ⭐️ Prerequisites
 
