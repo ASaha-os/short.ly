@@ -1,16 +1,16 @@
 # URL Shortener Mini
 
-A console-based, beginner-friendly Java application demonstrating core backend development concepts, including JDBC, H2 SQL database integration, and basic system design principles.This project was developed using a 10-step roadmap, with each step designed as a separate Pull Request (PR) for Hacktoberfest contributions.
+A console-based, beginner-friendly **Java** application demonstrating core backend development concepts, including JDBC, H2 SQL database integration, and basic system design principles.This project was developed using a **10-step roadmap**, with each step designed as a separate Pull Request (PR) for Hacktoberfest contributions.
 
-## Preview
+## 📌 Preview
 
-- [Features]
-- [Prerequisites]
-- [How to build and run]
-- [Running Test]
-- [Project Structure]
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [How to build and run](#how-to-build-and-run)
+- [Running Test](#running-tests)
+- [Project Structure](#project-structure)
   
-## Features
+## ⭐️ Features
 
 - **URL Shortening**: Generates a unique, short key (6 characters, alphanumeric) for any long URL.
 
@@ -24,7 +24,7 @@ A console-based, beginner-friendly Java application demonstrating core backend d
 
 - **Unit Tested**: Includes JUnit 5 tests for core components (KeyGenerator and DatabaseManager).
 
-##  Prerequisites
+## ⭐️ Prerequisites
 
 To build and run this application, you need:
 
@@ -34,16 +34,16 @@ To build and run this application, you need:
 
 - Git (for version control and contribution).
 
-## How to Build and Run
+## ⭐️ How to Build and Run
 
-1. Clone the Repository
+1. **Clone the Repository**
    
   ```bash
   git clone [https://github.com/your-username/url-shortener-mini.git](https://github.com/your-username/url-shortener-mini.git)
   cd url-shortener-mini
   ```
 
-2. Build the Project
+2. **Build the Project**
    
   Use Maven to compile the Java files and download the necessary dependencies (like the H2 database driver).
   
@@ -51,7 +51,7 @@ To build and run this application, you need:
   mvn clean install
   ```
 
-3. Run the Application
+3. **Run the Application**
    
   Execute the main class directly using the Maven Exec plugin.
   ```
@@ -60,7 +60,7 @@ To build and run this application, you need:
 
 The application will start, connect to the in-memory H2 database, initialize the table schema, and display the interactive menu.
 
-## Running Tests
+## ⭐️ Running Tests
 
 All core functionality (key generation, saving, and lookup) is covered by JUnit 5 tests. 
 You can run them with a single Maven command:
@@ -69,7 +69,7 @@ You can run them with a single Maven command:
 mvn test
 ```
 
-## Project Structure
+## 📌 Project Structure
 ```plaintext
 url-shortener-mini/
 ├── pom.xml                               # Maven configuration (Dependencies: H2, JUnit 5)
